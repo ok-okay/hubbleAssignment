@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.example.demo.model.UserEntity;
@@ -33,34 +34,16 @@ public class UserController {
 	
 	@PostMapping("/users")
 	public ModelAndView createUser(@RequestParam("phone") String phone){
-		userService.createUser(phone);
+		userService.handleCreateUser(phone);
 		long userId = userService.getUserByPhone(phone);
-		model.setViewName("redirect:"+userId);
+		model.setViewName("redirect:users/"+userId);
 		return model;
 	}
 	
-	@PostMapping("/users/{userId}")
+	@PostMapping("users/{userId}")
 	public ModelAndView patchUser(@PathVariable String userId, @ModelAttribute("user") UserEntity user){
 		userService.patchUser(userId, user);
 		model.setViewName("redirect:"+userId);
-		return model;
-	}
-	
-	@GetMapping("/login")
-	public ModelAndView loginPage() {
-		model.setViewName("login");
-		return model;
-	}
-	
-	@GetMapping("/users")
-	public ModelAndView usersPage() {
-		model.setViewName("userDetails");
-		return model;
-	}
-	
-	@PostMapping("/login")
-	public ModelAndView handleLogin() {
-		model.setViewName("userDetails");
 		return model;
 	}
 	

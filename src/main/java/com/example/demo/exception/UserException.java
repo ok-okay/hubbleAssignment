@@ -1,5 +1,7 @@
 package com.example.demo.exception;
 
+import java.util.NoSuchElementException;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,4 +17,13 @@ public class UserException {
 	   model.addObject("redirect", req.getRequestURI());
 	   return model;
    }
+   
+   @ExceptionHandler(value = NoSuchElementException.class)
+   public ModelAndView exception(NoSuchElementException exception, HttpServletRequest req) {
+	   ModelAndView model = new ModelAndView("error");
+	   model.addObject("error", exception.getMessage());
+	   model.addObject("redirect", "/");
+	   return model;
+   }
+   
 }

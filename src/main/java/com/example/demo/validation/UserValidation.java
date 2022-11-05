@@ -1,11 +1,12 @@
 package com.example.demo.validation;
+import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 
 
 @Service
-public class PersonalDetailsValidation {
+public class UserValidation {
 	
 	public void nameValidation(String name) {
 		if(name!="") {
@@ -65,6 +66,14 @@ public class PersonalDetailsValidation {
 		}
 		catch(Exception e){
 			throw new IllegalArgumentException("UserID must be a number");
+		}
+	}
+	
+	public void phoneValidation(String phone) {
+		String phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$";
+		Pattern pat = Pattern.compile(phoneRegex);
+		if(!pat.matcher(phone).matches()) {
+			throw new NoSuchElementException("Invalid Phone");
 		}
 	}
 	

@@ -14,7 +14,7 @@ import com.example.demo.model.UserEntity;
 import com.example.demo.repository.RolesRepository;
 import com.example.demo.repository.UserRepository;
 
-import com.example.demo.validation.PersonalDetailsValidation;
+import com.example.demo.validation.UserValidation;
 
 @Service
 public class UserService {
@@ -24,16 +24,15 @@ public class UserService {
 	private RolesRepository rolesRepo;
 	
 	@Autowired
-	private PersonalDetailsValidation validator;
+	private UserValidation validator;
 	
-	UserEntity user = new UserEntity();
-	RolesEntity rolesEntity = new RolesEntity();
 	
 	public Map<String, String> getUser(String userId) {
+		UserEntity user = new UserEntity();
 		validator.userIdValidation(userId);
 		Map<String, String> userData = new HashMap<>();
 		user = userRepo.findById(Long.parseLong(userId)).get();
-		
+
 		userData.put("userId", user.getId().toString());
 		userData.put("firstName", user.getFirstName());
 		userData.put("lastName", user.getLastName());
@@ -49,6 +48,9 @@ public class UserService {
 	
 	
 	public String createUser(String phone) {
+		validator.phoneValidation(phone);
+		UserEntity user = new UserEntity();
+		RolesEntity rolesEntity = new RolesEntity();
 		user.setPhone(phone);
 		rolesEntity.setName(RolesEnum.valueOf("USER"));
 		rolesRepo.save(rolesEntity);
@@ -56,6 +58,17 @@ public class UserService {
 		rolesEntitySet.add(rolesEntity);
 		user.setRole(rolesEntitySet);
 		userRepo.save(user);
+		return phone;
+	}
+	
+	public String handleCreateUser(String phone) {
+		UserEntity user = new UserEntity();
+		user = userRepo.findByPhone(phone);
+		
+		if(user==null) {
+			createUser(phone);
+		}
+
 		return phone;
 	}
 	
