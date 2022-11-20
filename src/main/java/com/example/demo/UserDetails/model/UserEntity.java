@@ -1,6 +1,5 @@
-package com.example.demo.model;
+package com.example.demo.UserDetails.model;
 
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,9 +29,6 @@ public class UserEntity {
 		joinColumns = @JoinColumn(name = "user_id"), 
 	    inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<RolesEntity> roles = new HashSet<>();
-
-	private String otpEncoded;
-	private Date otpExpireTime;
 	
 	
 	public Long getId() {
@@ -92,18 +88,6 @@ public class UserEntity {
 	}
 	public void setRole(Set<RolesEntity> roles) {
 		this.roles = roles;
-	}
-	public String getOtpEncoded() {
-		return otpEncoded;
-	}
-	public void setOtpEncoded(String otpEncoded) {
-		this.otpEncoded = otpEncoded;
-	}
-	public Date getOtpExpireTime() {
-		return otpExpireTime;
-	}
-	public void setOtpExpireTime(Date otpExpireTime) {
-		this.otpExpireTime = otpExpireTime;
 	}
 
 }
