@@ -57,4 +57,11 @@ public class UserController {
 		return model;
 	}
 	
+	@PostMapping("users/logout")
+	public ModelAndView logoutUser(HttpServletResponse response){
+		String redirectUrl = userService.logoutUser(response);
+		model.setViewName(redirectUrl);
+		return model;
+	}
+	
 }

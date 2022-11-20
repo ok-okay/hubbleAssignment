@@ -40,5 +40,10 @@
 
   <input type="submit" value="Update">
 </form>
+
+<form method="POST" action="/users/logout">
+<input type="submit" value="Logout">
+</form>
+
 </body>
 </html>

@@ -137,7 +137,14 @@ public class UserService {
 		else {
 			Boolean authorized = jwtUtil.validateAccessToken(token);
 			if(authorized) {
-				if(jwtUtil.getUserId(token).equals(userId)) {
+				Set<RolesEntity> roles = new HashSet<>();
+				roles = userRepo.findById(Long.parseLong(userId)).get().getRole();
+				String rolesString = "";
+				for(RolesEntity role:roles) {
+					rolesString+=role.getName().toString();
+					rolesString+=", ";	
+				}
+				if(jwtUtil.getUserId(token).equals(userId) || rolesString.contains("ADMIN")) {
 					return "userDetails/userDetails";
 				}
 				else {
@@ -159,7 +166,14 @@ public class UserService {
 		else {
 			Boolean authorized = jwtUtil.validateAccessToken(token);
 			if(authorized) {
-				if(jwtUtil.getUserId(token).equals(userId)) {
+				Set<RolesEntity> roles = new HashSet<>();
+				roles = userRepo.findById(Long.parseLong(userId)).get().getRole();
+				String rolesString = "";
+				for(RolesEntity role:roles) {
+					rolesString+=role.getName().toString();
+					rolesString+=", ";	
+				}
+				if(jwtUtil.getUserId(token).equals(userId) || rolesString.contains("ADMIN")) {
 					patchUser(userId, user);
 					return "redirect:"+userId;
 				}
@@ -172,6 +186,11 @@ public class UserService {
 				return "redirect:"+BASE_URL;
 			}
 		}
+	}
+	
+	public String logoutUser(HttpServletResponse response) {
+		cookieUtil.deleteCookie(response);
+		return ("redirect:"+BASE_URL);
 	}
 	
 }
