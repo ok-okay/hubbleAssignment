@@ -71,6 +71,7 @@ public class UserController {
 	
 	@PostMapping("users/logout")
 	public ModelAndView logoutUser(HttpServletResponse response){
+		model.clear();
 		String redirectUrl = userService.logoutUser(response);
 		model.setViewName(redirectUrl);
 		return model;
