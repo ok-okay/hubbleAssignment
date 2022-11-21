@@ -123,21 +123,9 @@ public class LoginPageService {
 			return ("loginPage/generateOTP");			
 		}
 		else {
-			String userId = jwtUtil.getUserId(jwtToken);
+			String userId = jwtUtil.extractJwtData(jwtToken).get("userId");
 			return ("redirect:"+BASE_URL+"users/"+userId);
 		}
-	}
-	
-	public String signInStatusCodeRedirect(Map<String, String> res) {
-		if(res.get("statusCode").equals("404")) {
-			return ("redirect:/");
-		}
-		else {
-			if(res.get("statusCode").equals("401")) {
-				return ("redirect:/auth/verify");
-			}
-		}
-		return "redirect:"+BASE_URL;
 	}
 	
 }

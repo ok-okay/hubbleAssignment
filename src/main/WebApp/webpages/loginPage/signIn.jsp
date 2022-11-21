@@ -9,11 +9,11 @@
 <body>
 <p>${msg}</p>
 <form action="/auth/verify" method="POST">
-	<label for="identifier">Phone number(With country code):</label><br>
+	<label for="identifier">Phone/Email:</label><br>
 	<input type="text" id="identifier" name="identifier" value="${identifier}" readonly><br>
 	<input type="password" id="otp" name="otp" placeholder="Enter OTP"><br>
-	<input type="hidden" id="medium" name="medium" value="PHONE"><br>
-	<input type="submit" value="SignIn/SignUp">
+	<input type="hidden" id="medium" name="medium" value="${medium}"><br>
+	<input type="submit" value="${submit}">
 </form>
 
 </body>

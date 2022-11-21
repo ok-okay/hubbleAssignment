@@ -2,6 +2,8 @@ package com.example.demo.LoginPage.utils;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,13 +70,18 @@ public class LoginJwtUtil {
         return false;
     }
     
-    public String getUserId(String token) {
+    public Map<String, String> extractJwtData(String token){
+    	Map<String, String> data = new HashMap<>();
     	String[] chunks = token.split("\\.");
     	Base64.Decoder decoder = Base64.getUrlDecoder();
     	String payload = new String(decoder.decode(chunks[1]));
-    	payload = payload.split(",")[0];
-		String userId = payload.substring(8, payload.length());
-    	return userId;
+    	payload = payload.substring(8, payload.length());
+    	payload = payload.substring(0, payload.indexOf('"'));
+    	
+    	chunks = payload.split(",");
+    	data.put("userId", chunks[0]);
+    	data.put("identifier", chunks[1]);
+    	
+    	return data;
     }
-    
 }

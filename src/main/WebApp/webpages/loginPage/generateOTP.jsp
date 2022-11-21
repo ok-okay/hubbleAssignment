@@ -10,7 +10,7 @@
 <p>${msg}</p>
 <h1>SignIn/SignUp</h1>
 <form action="/auth" method="POST">
-	<label for="identifier">Phone number(With country code):</label><br>
+	<label for="identifier">Phone number:</label><br>
 	<input type="text" id="identifier" name="identifier" placeholder="Enter Phone" required><br>
 	<input type="hidden" id="medium" name="medium" value="PHONE">
 	<input type="submit" value="Generate OTP">

@@ -149,11 +149,11 @@ public class UserService {
 					rolesString+=role.getName().toString();
 					rolesString+=", ";	
 				}
-				if(jwtUtil.getUserId(token).equals(userId) || rolesString.contains("ADMIN")) {
+				if(jwtUtil.extractJwtData(token).get("userId").equals(userId) || rolesString.contains("ADMIN")) {
 					return "userDetails/userDetails";
 				}
 				else {
-					return "redirect:"+BASE_URL+"users/"+jwtUtil.getUserId(token);					
+					return "redirect:"+BASE_URL+"users/"+jwtUtil.extractJwtData(token).get("userId");					
 				}
 			}
 			else {
@@ -164,13 +164,16 @@ public class UserService {
 	}
 	
 	public Boolean emailChanged(String userId, UserEntity user) {
+		if(userRepo.findById(Long.parseLong(userId)).get().getEmail()==null) {
+			return false;
+		}
 		return (userRepo.findById(Long.parseLong(userId)).get()!=null && !userRepo.findById(Long.parseLong(userId)).get().getEmail().equals(user.getEmail()));
 	}
 	
-	public ModelAndView authorizeUserPost(HttpServletResponse response, HttpServletRequest request, String userId, UserEntity user) {
+	public String authorizeUserPost(HttpServletResponse response, HttpServletRequest request, String userId, UserEntity user) {
 		String userToken = cookieUtil.readUserCookie(request);
 		if(userToken.equals("Not found!")) {
-			model.setViewName("redirect:"+BASE_URL);
+			return ("redirect:"+BASE_URL);
 		}
 		else {
 			Boolean authorized = jwtUtil.validateAccessToken(userToken);
@@ -182,25 +185,52 @@ public class UserService {
 					rolesString+=role.getName().toString();
 					rolesString+=", ";	
 				}
-				if(jwtUtil.getUserId(userToken).equals(userId) || rolesString.contains("ADMIN")) {
-					patchUser(userId, user);
-					model.setViewName("redirect:"+userId);
+				if(jwtUtil.extractJwtData(userToken).get("userId").equals(userId) || rolesString.contains("ADMIN")) {
+					if(emailChanged(userId, user) && !user.getEmail().equals("")) {
+						validator.emailValidation(user.getEmail());
+						String url = BASE_URL+"/auth";
+						url+="?identifier="+user.getEmail()+"&medium=EMAIL";
+						RestTemplate restTemplate = new RestTemplate();
+						restTemplate.postForObject(url, null, ModelAndView.class);
+						return ("redirect:"+BASE_URL+"auth/verify?identifier="+user.getEmail()+"&medium=EMAIL");					}
+					else {
+						patchUser(userId, user);
+						return("redirect:"+userId);
+					}
 				}
 				else {
-					model.setViewName("redirect:"+BASE_URL+"users/"+jwtUtil.getUserId(userToken));
+					return ("redirect:"+BASE_URL+"users/"+jwtUtil.extractJwtData(userToken).get("userId"));
 				}
 			}
 			else {
 				cookieUtil.deleteUserCookie(response);
-				model.setViewName("redirect:"+BASE_URL);
+				return ("redirect:"+BASE_URL);
 			}
 		}
-		return model;
 	}
 	
 	public String logoutUser(HttpServletResponse response) {
 		cookieUtil.deleteUserCookie(response);
-		return ("redirect:"+BASE_URL);
+		return "redirect:"+BASE_URL;
+	}
+	
+	public String updateIdentifier(HttpServletResponse response, String updateToken) {
+		Boolean authorized = jwtUtil.validateAccessToken(updateToken);
+		if(authorized) {
+			System.out.println("Authorized");
+			String identifier = jwtUtil.extractJwtData(updateToken).get("identifier");
+			String userId = jwtUtil.extractJwtData(updateToken).get("userId");
+			String medium = jwtUtil.extractJwtData(updateToken).get("medium");
+			UserEntity oldUser = userRepo.findById(Long.parseLong(userId)).get();
+			if(medium.equals("EMAIL")) {
+				oldUser.setEmail(identifier);
+			}
+			userRepo.save(oldUser);	
+		}
+		else {
+			cookieUtil.deleteUserCookie(response);
+		}		
+		return "redirect:"+BASE_URL;
 	}
 	
 }

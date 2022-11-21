@@ -1,6 +1,8 @@
 package com.example.demo.UserDetails.utils;
 
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -45,23 +47,22 @@ public class UserJwtUtil {
          
         return false;
     }
-    
-    public String getUserId(String token) {
+
+    public Map<String, String> extractJwtData(String token){
+    	Map<String, String> data = new HashMap<>();
     	String[] chunks = token.split("\\.");
     	Base64.Decoder decoder = Base64.getUrlDecoder();
     	String payload = new String(decoder.decode(chunks[1]));
-    	payload = payload.split(",")[0];
-		String userId = payload.substring(8, payload.length());
-    	return userId;
-    }
-    
-    public String getIdentifier(String token) {
-    	String[] chunks = token.split("\\.");
-    	Base64.Decoder decoder = Base64.getUrlDecoder();
-    	String payload = new String(decoder.decode(chunks[1]));
-//    	payload = payload.split(",")[0];
-//		String userId = payload.substring(8, payload.length());
-    	return payload;
+    	payload = payload.substring(8, payload.length());
+    	payload = payload.substring(0, payload.indexOf('"'));
+    	
+    	chunks = payload.split(",");
+    	data.put("userId", chunks[0]);
+    	data.put("identifier", chunks[1]);
+    	if(chunks.length==3) {
+        	data.put("medium", chunks[2]);
+    	}    	
+    	return data;
     }
     
 }
