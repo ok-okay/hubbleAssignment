@@ -12,8 +12,10 @@ import org.springframework.web.util.WebUtils;
 public class LoginCookieUtil {
     @Value("${app.jwt.exp}")
     private String EXPIRE_DURATION;
+    @Value("${app.otp.exp}")
+    private String OTP_EXPIRY;
 	
-	public void createCookie(HttpServletResponse response, String jwtToken) {
+	public void createUserCookie(HttpServletResponse response, String jwtToken) {
 		Cookie cookie = new Cookie("jwtToken", jwtToken);
 	    cookie.setMaxAge(Integer.parseInt(EXPIRE_DURATION)/1000);
 	    cookie.setPath("/");
@@ -21,7 +23,15 @@ public class LoginCookieUtil {
 	    response.addCookie(cookie);
 	}
 	
-	public String readCookie(HttpServletRequest request) {
+	public void createUpdateCookie(HttpServletResponse response, String updateToken) {
+		Cookie cookie = new Cookie("updateToken", updateToken);
+	    cookie.setMaxAge(Integer.parseInt(OTP_EXPIRY)/1000);
+	    cookie.setPath("/");
+	    cookie.setSecure(false);
+	    response.addCookie(cookie);
+	}
+	
+	public String readUserCookie(HttpServletRequest request) {
 		Cookie cookie = WebUtils.getCookie(request, "jwtToken");
 		if(cookie!=null) {
 			return cookie.getValue();
@@ -29,5 +39,13 @@ public class LoginCookieUtil {
 		else {
 			return "Not found!";
 		}
+	}
+	
+	public void deleteUserCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie("jwtToken", null);
+	    cookie.setMaxAge(0);
+	    cookie.setPath("/");
+	    cookie.setSecure(false);
+	    response.addCookie(cookie);
 	}
 }

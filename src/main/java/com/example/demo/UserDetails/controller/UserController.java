@@ -52,9 +52,7 @@ public class UserController {
 	
 	@PostMapping("users/{userId}")
 	public ModelAndView patchUser(HttpServletResponse response, HttpServletRequest request, @PathVariable String userId, @ModelAttribute("user") UserEntity user){
-		String redirectUrl = userService.authorizeUserPost(response, request, userId, user);
-		model.setViewName(redirectUrl);
-		return model;
+		return userService.authorizeUserPost(response, request, userId, user);
 	}
 	
 	@PostMapping("users/logout")

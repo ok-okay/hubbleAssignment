@@ -118,7 +118,7 @@ public class LoginPageService {
 	}
 	
 	public String generateOtpRedirect(HttpServletRequest request) {
-		String jwtToken = cookieUtil.readCookie(request);
+		String jwtToken = cookieUtil.readUserCookie(request);
 		if(jwtToken.equals("Not found!")) {
 			return ("loginPage/generateOTP");			
 		}

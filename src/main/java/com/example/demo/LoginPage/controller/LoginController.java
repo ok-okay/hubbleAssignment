@@ -40,7 +40,7 @@ public class LoginController {
 	
 	@PostMapping("/auth")
 	public ModelAndView generateOtp(@ModelAttribute("auth") AuthEntity auth) {
-		model.setViewName("redirect:auth/verify");
+		model.setViewName("redirect:"+BASE_URL+"auth/verify");
 		model.addObject("identifier", auth.getIdentifier());
 		loginService.handleGenerateOtp(auth);
 		return model;
@@ -55,10 +55,11 @@ public class LoginController {
 	@PostMapping("/auth/verify")
 	public ModelAndView signinPage(HttpServletResponse response, HttpServletRequest request, @ModelAttribute("auth") AuthEntity auth) {
 		Map<String, String> res = loginService.authenticateUser(auth);
+		
 		if(res.get("statusCode").equals("200")) {
 			String userId = loginService.findOrCreateUser(auth);
-			String jwtToken = jwtUtil.generateAccessToken(userId, auth.getIdentifier());
-			cookieUtil.createCookie(response, jwtToken);
+			String userToken = jwtUtil.generateUserAccessToken(userId, auth.getIdentifier());
+			cookieUtil.createUserCookie(response, userToken);
 		    
 			model.setViewName("redirect:"+BASE_URL+"users/"+userId);
 			model.addObject("msg", "");
@@ -67,6 +68,7 @@ public class LoginController {
 			model.setViewName(loginService.signInStatusCodeRedirect(res));
 			model.addObject("msg", res.get("msg"));
 		}
+		
 		return model;
 	}
 	

@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.WebUtils;
 
 import com.example.demo.UserDetails.model.RolesEntity;
@@ -33,6 +35,9 @@ public class UserService {
 	
 	@Autowired
 	private UserValidation validator;
+	
+	@Autowired
+	ModelAndView model;
 	
 	@Autowired
 	UserCookieUtil cookieUtil;
@@ -130,7 +135,7 @@ public class UserService {
 	}
 	
 	public String authorizeUserGet(HttpServletResponse response, HttpServletRequest request, String userId) {
-		String token = cookieUtil.readCookie(request);
+		String token = cookieUtil.readUserCookie(request);
 		if(token.equals("Not found!")) {
 			return "redirect:"+BASE_URL;
 		}
@@ -152,19 +157,23 @@ public class UserService {
 				}
 			}
 			else {
-				cookieUtil.deleteCookie(response);
+				cookieUtil.deleteUserCookie(response);
 				return "redirect:"+BASE_URL;
 			}
 		}
 	}
 	
-	public String authorizeUserPost(HttpServletResponse response, HttpServletRequest request, String userId, UserEntity user) {
-		String token = cookieUtil.readCookie(request);
-		if(token.equals("Not found!")) {
-			return "redirect:"+BASE_URL;
+	public Boolean emailChanged(String userId, UserEntity user) {
+		return (userRepo.findById(Long.parseLong(userId)).get()!=null && !userRepo.findById(Long.parseLong(userId)).get().getEmail().equals(user.getEmail()));
+	}
+	
+	public ModelAndView authorizeUserPost(HttpServletResponse response, HttpServletRequest request, String userId, UserEntity user) {
+		String userToken = cookieUtil.readUserCookie(request);
+		if(userToken.equals("Not found!")) {
+			model.setViewName("redirect:"+BASE_URL);
 		}
 		else {
-			Boolean authorized = jwtUtil.validateAccessToken(token);
+			Boolean authorized = jwtUtil.validateAccessToken(userToken);
 			if(authorized) {
 				Set<RolesEntity> roles = new HashSet<>();
 				roles = userRepo.findById(Long.parseLong(userId)).get().getRole();
@@ -173,23 +182,24 @@ public class UserService {
 					rolesString+=role.getName().toString();
 					rolesString+=", ";	
 				}
-				if(jwtUtil.getUserId(token).equals(userId) || rolesString.contains("ADMIN")) {
+				if(jwtUtil.getUserId(userToken).equals(userId) || rolesString.contains("ADMIN")) {
 					patchUser(userId, user);
-					return "redirect:"+userId;
+					model.setViewName("redirect:"+userId);
 				}
 				else {
-					return "redirect:"+BASE_URL+"users/"+jwtUtil.getUserId(token);					
+					model.setViewName("redirect:"+BASE_URL+"users/"+jwtUtil.getUserId(userToken));
 				}
 			}
 			else {
-				cookieUtil.deleteCookie(response);
-				return "redirect:"+BASE_URL;
+				cookieUtil.deleteUserCookie(response);
+				model.setViewName("redirect:"+BASE_URL);
 			}
 		}
+		return model;
 	}
 	
 	public String logoutUser(HttpServletResponse response) {
-		cookieUtil.deleteCookie(response);
+		cookieUtil.deleteUserCookie(response);
 		return ("redirect:"+BASE_URL);
 	}
 	

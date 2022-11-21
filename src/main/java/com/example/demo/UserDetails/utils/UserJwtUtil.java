@@ -18,6 +18,9 @@ import io.jsonwebtoken.UnsupportedJwtException;
 public class UserJwtUtil {
 	@Value("${app.jwt.exp}")
     private String EXPIRE_DURATION;
+	
+	@Value("${app.otp.exp}")
+    private String OTP_EXPIRY;
     
     @Value("${app.jwt.secret}")
     private String SECRET_KEY;
@@ -50,6 +53,15 @@ public class UserJwtUtil {
     	payload = payload.split(",")[0];
 		String userId = payload.substring(8, payload.length());
     	return userId;
+    }
+    
+    public String getIdentifier(String token) {
+    	String[] chunks = token.split("\\.");
+    	Base64.Decoder decoder = Base64.getUrlDecoder();
+    	String payload = new String(decoder.decode(chunks[1]));
+//    	payload = payload.split(",")[0];
+//		String userId = payload.substring(8, payload.length());
+    	return payload;
     }
     
 }

@@ -13,7 +13,7 @@ public class UserCookieUtil {
     @Value("${app.jwt.exp}")
     private String EXPIRE_DURATION;
 
-	public String readCookie(HttpServletRequest request) {
+	public String readUserCookie(HttpServletRequest request) {
 		Cookie cookie = WebUtils.getCookie(request, "jwtToken");
 		if(cookie!=null) {
 			return cookie.getValue();
@@ -23,7 +23,17 @@ public class UserCookieUtil {
 		}
 	}
 	
-	public void deleteCookie(HttpServletResponse response) {
+	public String readUpdateCookie(HttpServletRequest request) {
+		Cookie cookie = WebUtils.getCookie(request, "updateToken");
+		if(cookie!=null) {
+			return cookie.getValue();
+		}
+		else {
+			return "Not found!";
+		}
+	}
+	
+	public void deleteUserCookie(HttpServletResponse response) {
 		Cookie cookie = new Cookie("jwtToken", null);
 	    cookie.setMaxAge(0);
 	    cookie.setPath("/");
