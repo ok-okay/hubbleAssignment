@@ -1,25 +1,26 @@
 package com.example.demo.LoginPage.service;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.WebUtils;
 
 import com.example.demo.LoginPage.model.AuthEntity;
 import com.example.demo.LoginPage.repository.AuthRepository;
 import com.example.demo.LoginPage.utils.LoginCookieUtil;
 import com.example.demo.LoginPage.utils.LoginJwtUtil;
 import com.example.demo.LoginPage.validation.LoginValidation;
+
 
 @Service
 public class LoginPageService {
@@ -36,7 +37,30 @@ public class LoginPageService {
     LoginCookieUtil cookieUtil;
     @Autowired
     LoginJwtUtil jwtUtil;
-	
+    
+    public String encryptString(String input)
+    {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+  
+            byte[] messageDigest = md.digest(input.getBytes());
+  
+            BigInteger no = new BigInteger(1, messageDigest);
+  
+            String hashtext = no.toString(16);
+  
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+  
+            return hashtext;
+        }
+  
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
 	public static String getRandomOtp() {
 	    Random rnd = new Random();
 	    int number = rnd.nextInt(999999);
@@ -62,8 +86,9 @@ public class LoginPageService {
 				validator.emailValidation(curAuth.getIdentifier());
 			}
 			
-			String otp = getRandomOtp();			
-			auth.setOtp(otp);
+			String otp = getRandomOtp();
+			
+			auth.setOtp(encryptString(otp));
 			System.out.println(otp);
 			
 			LocalDateTime updatedTime;
@@ -86,7 +111,7 @@ public class LoginPageService {
 			res.put("statusCode", "404");
 		}
 		else {
-			if(auth.getOtp().equals(curAuth.getOtp())) {
+			if(encryptString(curAuth.getOtp()).equals(auth.getOtp())) {
 				LocalDateTime now = LocalDateTime.now();
 				if(now.isBefore(auth.getExpiryDate())) {
 					res.put("msg", "User authorized successfully!");
