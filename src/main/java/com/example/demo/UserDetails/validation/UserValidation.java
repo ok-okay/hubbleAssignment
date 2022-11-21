@@ -70,9 +70,10 @@ public class UserValidation {
 	}
 	
 	public void phoneValidation(String phone) {
-		String phoneRegex = "^[\\+]?[(]?[0-9]{3}[)]?[-\\s\\.]?[0-9]{3}[-\\s\\.]?[0-9]{4,6}$";
-		Pattern pat = Pattern.compile(phoneRegex);
-		if(!pat.matcher(phone).matches()) {
+		String phoneRegex = "^\\d{10}$";
+		Pattern pattern = Pattern.compile(phoneRegex);
+
+		if(!pattern.matcher(phone).matches()) {
 			throw new NoSuchElementException("Invalid Phone");
 		}
 	}
