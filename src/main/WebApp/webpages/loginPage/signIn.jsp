@@ -7,13 +7,13 @@
 <title>Enter OTP</title>
 </head>
 <body>
-<p>${msg}</p>
+<p>${data.get("msg")}</p>
 <form action="/auth/verify" method="POST">
-	<label for="identifier">Phone/Email:</label><br>
-	<input type="text" id="identifier" name="identifier" value="${identifier}" readonly><br>
+	<label for="identifier">${data.get('medium')}</label><br>
+	<input type="text" id="identifier" name="identifier" value="${data.get('identifier')}" readonly><br>
 	<input type="password" id="otp" name="otp" placeholder="Enter OTP"><br>
-	<input type="hidden" id="medium" name="medium" value="${medium}"><br>
-	<input type="submit" value="${submit}">
+	<input type="hidden" id="medium" name="medium" value="${data.get('medium')}"><br>
+	<input type="submit" value="${data.get('submit')}">
 </form>
 
 </body>

@@ -167,6 +167,15 @@ public class UserService {
 		return (userRepo.findById(Long.parseLong(userId)).get()!=null && !userRepo.findById(Long.parseLong(userId)).get().getEmail().equals(user.getEmail()));
 	}
 	
+	public Boolean emailExists(String email) {
+		if(userRepo.findByEmail(email)==null) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
 	public String authorizeUserPost(HttpServletResponse response, HttpServletRequest request, String userId, UserEntity user) {
 		String userToken = cookieUtil.readUserCookie(request);
 		if(userToken.equals("Not found!")) {
@@ -184,12 +193,17 @@ public class UserService {
 				}
 				if(jwtUtil.extractJwtData(userToken).get("userId").equals(userId) || rolesString.contains("ADMIN")) {
 					if(emailChanged(userId, user) && !user.getEmail().equals("")) {
-						validator.emailValidation(user.getEmail());
-						String url = BASE_URL+"/auth";
-						url+="?identifier="+user.getEmail()+"&medium=EMAIL";
-						RestTemplate restTemplate = new RestTemplate();
-						restTemplate.postForObject(url, null, ModelAndView.class);
-						return ("redirect:"+BASE_URL+"auth/verify?identifier="+user.getEmail()+"&medium=EMAIL");					}
+						if(emailExists(user.getEmail())) {
+							return ("redirect:"+BASE_URL);
+						}
+						else {
+							validator.emailValidation(user.getEmail());
+							String url = BASE_URL+"/auth";
+							url+="?identifier="+user.getEmail()+"&medium=EMAIL";
+							RestTemplate restTemplate = new RestTemplate();
+							restTemplate.postForObject(url, null, ModelAndView.class);
+							return ("redirect:"+BASE_URL+"auth/verify?identifier="+user.getEmail()+"&medium=EMAIL");					}							
+						}
 					else {
 						patchUser(userId, user);
 						return("redirect:"+userId);

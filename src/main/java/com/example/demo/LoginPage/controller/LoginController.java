@@ -53,15 +53,8 @@ public class LoginController {
 	@GetMapping("/auth/verify")
 	public ModelAndView authScreen(@RequestParam("medium") Optional<String> medium, @RequestParam("identifier") String identifier, RedirectAttributes ra) {
 		model.setViewName("loginPage/signIn");
-		if(medium.isEmpty()) {
-			model.addObject("medium", "PHONE");
-			model.addObject("submit", "SignIn/SignUp");
-		}
-		else {
-			model.addObject("medium", medium.get().split(",")[0]);
-			model.addObject("submit", "Update "+medium.get().split(",")[0]);
-		}
-		model.addObject("identifier", identifier);
+		Map<String, String> data = loginService.authScreenData(medium, identifier);
+		model.addObject("data", data);
 		return model;
 	}
 	
@@ -70,50 +63,9 @@ public class LoginController {
 		model.clear();
 		Map<String, String> res = loginService.authenticateUser(auth);
 		String userToken = cookieUtil.readUserCookie(request);
-		if(userToken.equals("Not found!")) {
-			if(res.get("statusCode").equals("200")) {
-				String userId = loginService.findOrCreateUser(auth);
-				userToken = jwtUtil.generateUserAccessToken(userId, auth.getIdentifier());
-				cookieUtil.createUserCookie(response, userToken);
-			    
-				model.setViewName("redirect:"+BASE_URL+"users/"+userId);
-			}
-			else {
-				if(res.get("statusCode").equals("404")) {
-					model.setViewName("redirect:"+BASE_URL);
-				}
-				if(res.get("statusCode").equals("401")) {
-					model.setViewName("redirect:"+BASE_URL+"auth/verify?identifier="+auth.getIdentifier());
-				}
-				model.addObject("msg", res.get("msg"));
-			}
-		}
-		else {
-			Boolean authorized = jwtUtil.validateAccessToken(userToken);
-			if(authorized) {
-				if(res.get("statusCode").equals("200")) {
-					String userId = jwtUtil.extractJwtData(userToken).get("userId");
-					String updateToken = jwtUtil.generateUpdateAccessToken(userId, auth.getIdentifier(), auth.getMedium().toString());
-					model.setViewName("redirect:"+BASE_URL+"users/"+userId+"?updateToken="+updateToken);									
-				}
-				else {
-					
-					if(res.get("statusCode").equals("404")) {
-						model.setViewName("redirect:"+BASE_URL);
-					}
-					if(res.get("statusCode").equals("401")) {
-						model.setViewName("redirect:"+BASE_URL+"auth/verify?identifier="+auth.getIdentifier());
-					}
-					model.addObject("msg", res.get("msg"));
-				}
-
-			}
-			else {
-				cookieUtil.deleteUserCookie(response);
-				model.setViewName("redirect:"+BASE_URL);
-			}
-
-		}
+		Map<String, String> data = loginService.userLoginData(response, userToken, auth, res);
+		model.setViewName(data.get("view"));
+		model.addObject("msg", data.get("msg"));
 		return model;
 	}
 	

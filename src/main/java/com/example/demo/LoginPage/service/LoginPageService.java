@@ -1,14 +1,13 @@
 package com.example.demo.LoginPage.service;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,31 +36,9 @@ public class LoginPageService {
     LoginCookieUtil cookieUtil;
     @Autowired
     LoginJwtUtil jwtUtil;
+
     
-    public String encryptString(String input)
-    {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-512");
-  
-            byte[] messageDigest = md.digest(input.getBytes());
-  
-            BigInteger no = new BigInteger(1, messageDigest);
-  
-            String hashtext = no.toString(16);
-  
-            while (hashtext.length() < 32) {
-                hashtext = "0" + hashtext;
-            }
-  
-            return hashtext;
-        }
-  
-        catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
-	public static String getRandomOtp() {
+	public String getRandomOtp() {
 	    Random rnd = new Random();
 	    int number = rnd.nextInt(999999);
 
@@ -88,7 +65,7 @@ public class LoginPageService {
 			
 			String otp = getRandomOtp();
 			
-			auth.setOtp(encryptString(otp));
+			auth.setOtp(otp);
 			System.out.println(otp);
 			
 			LocalDateTime updatedTime;
@@ -111,7 +88,7 @@ public class LoginPageService {
 			res.put("statusCode", "404");
 		}
 		else {
-			if(encryptString(curAuth.getOtp()).equals(auth.getOtp())) {
+			if(curAuth.getOtp().equals(auth.getOtp())) {
 				LocalDateTime now = LocalDateTime.now();
 				if(now.isBefore(auth.getExpiryDate())) {
 					res.put("msg", "User authorized successfully!");
@@ -151,6 +128,77 @@ public class LoginPageService {
 			String userId = jwtUtil.extractJwtData(jwtToken).get("userId");
 			return ("redirect:"+BASE_URL+"users/"+userId);
 		}
+	}
+	
+	public Map<String, String> authScreenData(Optional<String> medium, String identifier){
+		Map<String, String> data = new HashMap<>();
+		if(medium.isEmpty()) {
+			data.put("medium", "PHONE");
+			data.put("submit", "SignIn/SignUp");
+		}
+		else {
+			data.put("medium", medium.get());
+			data.put("submit", "Update "+medium.get());
+		}
+		data.put("identifier", identifier);
+		data.put("msg", "");
+		return data;
+	}
+	
+	public Map<String, String> userLoginData(HttpServletResponse response, String userToken, AuthEntity auth, Map<String, String> res){
+		Map<String, String> data = new HashMap<>();
+		if(userToken.equals("Not found!")) {
+			if(res.get("statusCode").equals("200")) {
+				String userId = findOrCreateUser(auth);
+				userToken = jwtUtil.generateUserAccessToken(userId, auth.getIdentifier());
+				cookieUtil.createUserCookie(response, userToken);
+			    data.put("view", "redirect:"+BASE_URL+"users/"+userId);
+			    data.put("msg", "");
+			}
+			else {
+				if(res.get("statusCode").equals("404")) {
+					data.put("view", "redirect:"+BASE_URL);
+				}
+				if(res.get("statusCode").equals("401")) {
+					String redirectUrl = "redirect:"+BASE_URL+"auth/verify";
+					redirectUrl+="?identifier="+auth.getIdentifier();
+					data.put("view", redirectUrl);
+				}
+				data.put("msg", res.get("msg"));
+			}
+		}
+		else {
+			Boolean authorized = jwtUtil.validateAccessToken(userToken);
+			if(authorized) {
+				if(res.get("statusCode").equals("200")) {
+					String userId = jwtUtil.extractJwtData(userToken).get("userId");
+					String updateToken = jwtUtil.generateUpdateAccessToken(userId, auth.getIdentifier(), auth.getMedium().toString());
+					data.put("view", "redirect:"+BASE_URL+"users/"+userId+"?updateToken="+updateToken);									
+					data.put("msg", "");
+				}
+				else {
+					
+					if(res.get("statusCode").equals("404")) {
+						data.put("view", "redirect:"+BASE_URL);
+					}
+					if(res.get("statusCode").equals("401")) {
+						String redirectUrl = "redirect:"+BASE_URL+"auth/verify";
+						redirectUrl+="?identifier="+auth.getIdentifier();
+						redirectUrl+="&medium="+auth.getMedium();
+						redirectUrl+="&submit=Update"+auth.getMedium();
+						data.put("view", redirectUrl);
+					}
+					data.put("msg", res.get("msg"));
+				}
+
+			}
+			else {
+				cookieUtil.deleteUserCookie(response);
+				data.put("view", "redirect:"+BASE_URL);
+			}
+
+		}
+		return data;
 	}
 	
 }
